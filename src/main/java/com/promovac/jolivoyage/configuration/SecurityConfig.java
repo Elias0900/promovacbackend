@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/*").permitAll()
+                        .requestMatchers("https://promovacbackend.onrender.com/**").permitAll()
                         .requestMatchers("/swagger-ui.html", "/v3/api-docs/**").permitAll()
                                 .anyRequest().authenticated())
                 .addFilterBefore(new JwtFilter(customUserDetailsService, jwtUtils), UsernamePasswordAuthenticationFilter.class)
