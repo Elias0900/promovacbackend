@@ -8,11 +8,13 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="promovac-back" />
+        <module name="jolivoyage" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="jolivoyage" options="-parameters" />
       <module name="promovac-back" options="-parameters" />
     </option>
   </component>
