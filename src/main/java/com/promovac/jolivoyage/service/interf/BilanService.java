@@ -27,4 +27,6 @@ public interface BilanService {
      * @param id L'ID de l'Bilan à supprimer.
      */
     void deleteBilan(Long id);
+
+    BilanDto getBilanByUserId(Long id);
 }

@@ -55,6 +55,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.addAllowedOrigin("http://localhost:5173");
+        configuration.addAllowedOrigin("http://localhost:4200");
         configuration.addAllowedOrigin("https://promovacbackend.onrender.com");
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");

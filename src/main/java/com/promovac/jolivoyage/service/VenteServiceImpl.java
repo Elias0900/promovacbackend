@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -29,6 +30,21 @@ public class VenteServiceImpl implements VenteService {
 
     @Autowired
     private BilanService bilanService;
+
+    @Override
+    public List<VenteDto> findAll() {
+       List<Vente> venteList = venteRepository.findAll();
+       List<VenteDto> venteDtoList = new ArrayList<>();
+
+
+        venteList.forEach(vente -> {
+          VenteDto venteDto = VenteDto.fromEntity(vente);
+            venteDtoList.add(venteDto);
+       });
+
+        return venteDtoList;
+
+    }
 
     @Override
     public VenteDto saveOrUpdateVente(VenteDto venteDto) {
@@ -76,13 +92,9 @@ public class VenteServiceImpl implements VenteService {
     }
 
     @Override
-    public List<VentesParJourDto> venteParJour(LocalDateTime startDate, LocalDateTime endDate) {
-        // Convertir LocalDateTime en LocalDate pour que le type corresponde avec la base de données
-        LocalDate start = startDate.toLocalDate(); // Juste la date sans l'heure
-        LocalDate end = endDate.toLocalDate(); // Juste la date sans l'heure
-
+    public List<VentesParJourDto> venteParJour(LocalDate startDate, LocalDate endDate) {
         // Appel de la méthode du repository avec les dates ajustées
-        return venteRepository.findVentesParJour(start, end);
+        return venteRepository.findVentesParJour(startDate, endDate);
     }
     @Override
     public List<VentesParJourDto> venteParJourByUser(LocalDateTime startDate, LocalDateTime endDate, Long userId) {
@@ -94,5 +106,44 @@ public class VenteServiceImpl implements VenteService {
         return venteRepository.findVentesParJourByUser(start, end, userId);
     }
 
+    @Override
+    public List<VentesParJourDto> getVentesParJour(int year) {
+        return venteRepository.findVentesParJourGraph(year);
+    }
+
+    @Override
+    public List<VentesParJourDto> getVentesParMois(int year) {
+        return venteRepository.findVentesParMoisGraph(year);
+    }
+
+    @Override
+    public List<VentesParJourDto> getVentesParAn() {
+        return venteRepository.findVentesParAn();
+    }
+
+    @Override
+    public Double totalMontantAssurance() {
+        return venteRepository.totalMontantAssurance();
+    }
+
+    @Override
+    public Double countAssuranceSouscrite() {
+        return venteRepository.countAssuranceSouscrite();
+    }
+
+    @Override
+    public Double totalMontant() {
+        return venteRepository.totalMontant();
+    }
+
+    @Override
+    public Double totalMontantTOForFramContaining(String tourOperateur) {
+        return venteRepository.totalMontantTOForFramContaining(tourOperateur);
+    }
+
+    @Override
+    public Double totalMontantTOForNonFram(String tourOperateur) {
+        return venteRepository.totalMontantTOForNonFram(tourOperateur);
+    }
 
 }

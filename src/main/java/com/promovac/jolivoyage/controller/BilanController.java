@@ -27,6 +27,13 @@ public class BilanController {
         return ResponseEntity.ok(bilanDto);
     }
 
+    // Endpoint pour récupérer un bilan par ID
+    @GetMapping(path = "/user/{id}", produces = "application/json")
+    public ResponseEntity<BilanDto> getBilanByUserId(@PathVariable Long id) {
+        BilanDto bilanDto = bilanService.getBilanByUserId(id);
+        return ResponseEntity.ok(bilanDto);
+    }
+
     // Endpoint pour supprimer un bilan par ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteBilan(@PathVariable Long id) {

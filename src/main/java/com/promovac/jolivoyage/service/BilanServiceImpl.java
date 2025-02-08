@@ -47,30 +47,35 @@ public class BilanServiceImpl implements BilanService {
         double realise = venteRepository.totalMontant(user.getId()) != null
                 ? venteRepository.totalMontant(user.getId()) : 0.0;
         double objectif = 100000;
-        double assurance = venteRepository.totalMontantAssuranceByUserId(user.getId()) != null
+        double montantAssurance = venteRepository.totalMontantAssuranceByUserId(user.getId()) != null
                 ? venteRepository.totalMontantAssuranceByUserId(user.getId()) : 0.0;
+        double nombreAssurance = venteRepository.countAssuranceSouscriteByUserId(user.getId()) != null
+                ? venteRepository.countAssuranceSouscriteByUserId(user.getId()) : 0.0;
+
+        double nombreVente = venteRepository.countVentesByUserId(user.getId()) != null
+                ? venteRepository.countVentesByUserId(user.getId()) : 0.0;
 
         // Mise à jour des valeurs du bilan
         bilan.setFramCroisieres(framCroisieres);
         bilan.setAutresTo(autresTo);
         bilan.setRealise(realise);
         bilan.setObjectif(objectif);
-        bilan.setAssurances(assurance);
+        bilan.setAssurances(nombreAssurance);
 
         // Calcul des pourcentages
         bilan.setPourcentageRealise(realise / objectif);
         bilan.setPourcentageFram(framCroisieres / objectif);
-        bilan.setPourcentageAssurance(assurance / objectif);
+        bilan.setPourcentageAssurance(nombreAssurance / nombreVente);
 
         // Calcul des primes
         if (bilan.getPourcentageRealise() >= 1.0) {
             bilan.setTotalPrimesFram(framCroisieres / 1.2 * 0.01);
             bilan.setTotalPrimesAutre(autresTo / 1.2 * 0.005);
-            bilan.setTotalPrimesAss(assurance / 1.2 * 0.01);
+            bilan.setTotalPrimesAss(montantAssurance / 1.2 * 0.01);
         } else {
             bilan.setTotalPrimesFram(framCroisieres / 1.2 * 0.01 * 0.8);
             bilan.setTotalPrimesAutre(autresTo / 1.2 * 0.005 * 0.8);
-            bilan.setTotalPrimesAss(assurance / 1.2 * 0.01 * 0.8);
+            bilan.setTotalPrimesAss(montantAssurance / 1.2 * 0.01 * 0.8);
         }
 
         // Calcul du total des primes brutes
@@ -100,5 +105,12 @@ public class BilanServiceImpl implements BilanService {
             throw new RuntimeException("Bilan non trouvé");
         }
         bilanRepository.deleteById(id); // Suppression du Bilan
+    }
+
+    @Override
+    public BilanDto getBilanByUserId(Long id) {
+        Bilan bilan = bilanRepository.findByUserId(id)
+                .orElseThrow(() -> new RuntimeException("Bilan non trouvé"));
+        return BilanDto.fromEntity(bilan); // Retourner le DTO
     }
 }

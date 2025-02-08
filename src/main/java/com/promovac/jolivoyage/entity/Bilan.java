@@ -33,6 +33,8 @@ public class Bilan implements Serializable {
     private double totalPrimesAutre; // TOTAL PRIMES Autre
     private double totalPrimesFram; // TOTAL PRIMES FRAM
     private double totalPrimesAss; // TOTAL PRIMES FRAM
+    private double montantAssurance;
+
 
 
 

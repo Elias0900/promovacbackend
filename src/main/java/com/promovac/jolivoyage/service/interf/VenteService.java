@@ -1,13 +1,20 @@
 package com.promovac.jolivoyage.service.interf;
 
-
 import com.promovac.jolivoyage.dto.VenteDto;
 import com.promovac.jolivoyage.dto.VentesParJourDto;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public interface VenteService {
+
+    /**
+     * Liste de ventes.
+     *
+     * @return Toutes les ventes réalisées.
+     */
+    List<VenteDto> findAll();
 
     /**
      * Sauvegarde ou met à jour une vente.
@@ -53,6 +60,46 @@ public interface VenteService {
      */
     Double totalMontantTOByUserIdForNonFram(Long userId, String tourOperateur);
 
-    List<VentesParJourDto> venteParJour(LocalDateTime start, LocalDateTime end);
+    /**
+     * Récupère les ventes par jour pour une période donnée.
+     */
+    List<VentesParJourDto> venteParJour(LocalDate start, LocalDate end);
+
+    /**
+     * Récupère les ventes par jour pour une période donnée et un utilisateur spécifique.
+     */
     List<VentesParJourDto> venteParJourByUser(LocalDateTime start, LocalDateTime end, Long user);
+
+    /**
+     * Récupère les ventes groupées par jour pour une année donnée.
+     *
+     * @param year Année à filtrer.
+     * @return Liste des ventes par jour.
+     */
+    List<VentesParJourDto> getVentesParJour(int year);
+
+    /**
+     * Récupère les ventes groupées par mois pour une année donnée.
+     *
+     * @param year Année à filtrer.
+     * @return Liste des ventes par mois.
+     */
+    List<VentesParJourDto> getVentesParMois(int year);
+
+    /**
+     * Récupère les ventes groupées par année.
+     *
+     * @return Liste des ventes par année.
+     */
+    List<VentesParJourDto> getVentesParAn();
+
+    Double totalMontantAssurance();
+
+    Double countAssuranceSouscrite();
+
+    Double totalMontant();
+
+    Double totalMontantTOForFramContaining(String tourOperateur);
+
+    Double totalMontantTOForNonFram(String tourOperateur);
 }

@@ -3,9 +3,15 @@ package com.promovac.jolivoyage.controller;
 import com.promovac.jolivoyage.configuration.JwtUtils;
 import com.promovac.jolivoyage.entity.User;
 import com.promovac.jolivoyage.repository.UserRepository;
+import com.promovac.jolivoyage.service.BilanServiceImpl;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -31,7 +37,9 @@ public class AuthController {
     private final JwtUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
 
-    @PostMapping("/register")
+    private final BilanServiceImpl bilanService;
+
+    @PostMapping(path = "/register",consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> register(@RequestBody User user) {
         if (userRepository.findByEmail(user.getEmail()) != null) {
             return ResponseEntity.badRequest().body("Username is already in use");
@@ -46,7 +54,7 @@ public class AuthController {
         return ResponseEntity.ok(userRepository.save(savedUser));
     }
 
-    @PostMapping("/login")
+    @PostMapping(path = "/login", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> login(@RequestBody User user) {
         try {
             // Authentifie l'utilisateur avec email et mot de passe
@@ -68,9 +76,10 @@ public class AuthController {
                 authData.put("nom", authenticatedUser.getNom());
                 authData.put("prenom", authenticatedUser.getPrenom());
                 authData.put("email", authenticatedUser.getEmail());
-                authData.put("rôle", authenticatedUser.getRole());
+                authData.put("role", authenticatedUser.getRole());
+                authData.put("id", authenticatedUser.getId());
 
-                return ResponseEntity.ok(authData);
+                return ResponseEntity.ok().body(authData);
             }
 
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
@@ -79,4 +88,5 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
     }
+
 }
