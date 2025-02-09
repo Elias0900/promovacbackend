@@ -1,10 +1,14 @@
 package com.promovac.jolivoyage.controller;
 
 import com.promovac.jolivoyage.dto.BilanDto;
+import com.promovac.jolivoyage.entity.Bilan;
 import com.promovac.jolivoyage.service.interf.BilanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/bilans")
@@ -39,5 +43,10 @@ public class BilanController {
     public ResponseEntity<Void> deleteBilan(@PathVariable Long id) {
         bilanService.deleteBilan(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/agence/{agenceId}")
+    public ResponseEntity<Map<String, Object>> getBilanByAgence(@PathVariable Long agenceId) {
+        return ResponseEntity.ok(bilanService.getBilanByAgence(agenceId));
     }
 }

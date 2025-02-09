@@ -2,6 +2,10 @@ package com.promovac.jolivoyage.service.interf;
 
 
 import com.promovac.jolivoyage.dto.BilanDto;
+import com.promovac.jolivoyage.entity.Bilan;
+
+import java.util.List;
+import java.util.Map;
 
 public interface BilanService {
 
@@ -29,4 +33,6 @@ public interface BilanService {
     void deleteBilan(Long id);
 
     BilanDto getBilanByUserId(Long id);
+
+    Map<String, Object> getBilanByAgence(Long agenceId);
 }

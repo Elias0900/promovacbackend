@@ -2,8 +2,10 @@ package com.promovac.jolivoyage.service;
 
 
 import com.promovac.jolivoyage.dto.BilanDto;
+import com.promovac.jolivoyage.entity.AgenceVoyage;
 import com.promovac.jolivoyage.entity.Bilan;
 import com.promovac.jolivoyage.entity.User;
+import com.promovac.jolivoyage.repository.AgenceVoyageRepository;
 import com.promovac.jolivoyage.repository.BilanRepository;
 import com.promovac.jolivoyage.repository.UserRepository;
 import com.promovac.jolivoyage.repository.VenteRepository;
@@ -12,6 +14,10 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -23,6 +29,9 @@ public class BilanServiceImpl implements BilanService {
 
     @Autowired
     private VenteRepository venteRepository;
+
+    @Autowired
+    private AgenceVoyageRepository agenceVoyageRepository;
 
     @Autowired
     private UserRepository myAppUserRepository;
@@ -112,5 +121,32 @@ public class BilanServiceImpl implements BilanService {
         Bilan bilan = bilanRepository.findByUserId(id)
                 .orElseThrow(() -> new RuntimeException("Bilan non trouvé"));
         return BilanDto.fromEntity(bilan); // Retourner le DTO
+    }
+
+    @Override
+    public Map<String, Object> getBilanByAgence(Long agenceId) {
+        // Récupérer l'agence pour obtenir son objectif
+        AgenceVoyage agence = agenceVoyageRepository.findById(agenceId)
+                .orElseThrow(() -> new RuntimeException("Agence non trouvée"));
+
+        // Récupérer les bilans des utilisateurs de cette agence
+        List<Bilan> bilans = bilanRepository.findByAgenceId(agenceId);
+
+        // Calcul du total réalisé par l'agence
+        double totalRealise = bilans.stream().mapToDouble(Bilan::getRealise).sum();
+
+        // Calcul du pourcentage réalisé par rapport à l'objectif de l'agence
+        double pourcentageRealise = (agence.getObjectif() > 0) ? (totalRealise / agence.getObjectif()) * 100 : 0;
+
+        // Construire la réponse sous forme de Map
+        Map<String, Object> bilanAgence = new HashMap<>();
+        bilanAgence.put("agenceId", agenceId);
+        bilanAgence.put("nomAgence", agence.getNom());
+        bilanAgence.put("objectif", agence.getObjectif());
+        bilanAgence.put("totalRealise", totalRealise);
+        bilanAgence.put("pourcentageRealise", pourcentageRealise);
+        bilanAgence.put("bilans", bilans); // Liste des bilans individuels
+
+        return bilanAgence;
     }
 }

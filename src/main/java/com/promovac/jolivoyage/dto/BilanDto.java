@@ -13,7 +13,6 @@ import lombok.*;
 public class BilanDto {
 
     private Long id;
-    private double objectif; // Objectif
     private double realise; // Réalisé
     private double pourcentageRealise; // % Réalisé
     private double pourcentageFram; // % FRAM
@@ -31,7 +30,6 @@ public class BilanDto {
 
         return BilanDto.builder()
                 .id(bilan.getId())
-                .objectif(bilan.getObjectif())
                 .realise(bilan.getRealise())
                 .pourcentageRealise(bilan.getPourcentageRealise())
                 .pourcentageFram(bilan.getPourcentageFram())
@@ -56,7 +54,6 @@ public class BilanDto {
 
         return Bilan.builder()
                 .id(bilanDto.getId())
-                .objectif(bilanDto.getObjectif())
                 .realise(bilanDto.getRealise())
                 .pourcentageRealise(bilanDto.getPourcentageRealise())
                 .pourcentageFram(bilanDto.getPourcentageFram())

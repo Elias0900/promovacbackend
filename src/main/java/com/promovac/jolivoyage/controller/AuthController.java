@@ -1,7 +1,11 @@
 package com.promovac.jolivoyage.controller;
 
 import com.promovac.jolivoyage.configuration.JwtUtils;
+import com.promovac.jolivoyage.dto.UserDTO;
+import com.promovac.jolivoyage.dto.UserLoginResponseDTO;
+import com.promovac.jolivoyage.entity.AgenceVoyage;
 import com.promovac.jolivoyage.entity.User;
+import com.promovac.jolivoyage.repository.AgenceVoyageRepository;
 import com.promovac.jolivoyage.repository.UserRepository;
 import com.promovac.jolivoyage.service.BilanServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,26 +40,34 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
+    private final AgenceVoyageRepository agenceVoyageRepository;
+
 
     private final BilanServiceImpl bilanService;
 
-    @PostMapping(path = "/register",consumes = "application/json", produces = "application/json")
-    public ResponseEntity<?> register(@RequestBody User user) {
-        if (userRepository.findByEmail(user.getEmail()) != null) {
+    @PostMapping(path = "/register", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<?> register(@RequestBody UserDTO userDTO) {
+        if (userRepository.findByEmail(userDTO.getEmail()) != null) {
             return ResponseEntity.badRequest().body("Username is already in use");
         }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        User savedUser = new User();
-        savedUser.setPassword(user.getPassword());
-        savedUser.setNom(user.getNom());
-        savedUser.setPrenom(user.getPrenom());
-        savedUser.setEmail(user.getEmail());
-        savedUser.setRole(user.getRole());
-        return ResponseEntity.ok(userRepository.save(savedUser));
+
+        AgenceVoyage agence = agenceVoyageRepository.findById(userDTO.getAgenceId())
+                .orElseThrow(() -> new RuntimeException("Agence non trouvée avec l'ID : " + userDTO.getAgenceId()));
+
+        User user = new User();
+        user.setNom(userDTO.getNom());
+        user.setPrenom(userDTO.getPrenom());
+        user.setEmail(userDTO.getEmail());
+        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+        user.setRole(userDTO.getRole()); // Si Role est un Enum
+        user.setAgence(agence);
+
+        return ResponseEntity.ok(userRepository.save(user));
     }
 
+
     @PostMapping(path = "/login", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<?> login(@RequestBody User user) {
+    public ResponseEntity<?> login(@RequestBody UserLoginResponseDTO user) {
         try {
             // Authentifie l'utilisateur avec email et mot de passe
             Authentication authentication = authenticationManager.authenticate(
@@ -69,17 +81,19 @@ public class AuthController {
                     return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
                 }
 
-                // Crée une réponse avec les données utilisateur
-                Map<String, Object> authData = new HashMap<>();
-                authData.put("token", jwtUtils.generateToken(authenticatedUser.getEmail()));
-                authData.put("type", "Bearer");
-                authData.put("nom", authenticatedUser.getNom());
-                authData.put("prenom", authenticatedUser.getPrenom());
-                authData.put("email", authenticatedUser.getEmail());
-                authData.put("role", authenticatedUser.getRole());
-                authData.put("id", authenticatedUser.getId());
+                // Création du DTO
+                UserLoginResponseDTO responseDTO = new UserLoginResponseDTO(
+                        jwtUtils.generateToken(authenticatedUser.getEmail()),
+                        authenticatedUser.getNom(),
+                        authenticatedUser.getPrenom(),
+                        authenticatedUser.getEmail(),
+                        authenticatedUser.getRole(),
+                        authenticatedUser.getId(),
+                        authenticatedUser.getAgence().getId(),
+                        authenticatedUser.getAgence().getObjectif()
+                );
 
-                return ResponseEntity.ok().body(authData);
+                return ResponseEntity.ok(responseDTO);
             }
 
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
@@ -88,5 +102,6 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
     }
+
 
 }
