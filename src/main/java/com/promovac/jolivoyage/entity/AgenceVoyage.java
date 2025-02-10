@@ -1,15 +1,13 @@
 package com.promovac.jolivoyage.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Entity
 @Data
@@ -25,4 +23,6 @@ public class AgenceVoyage implements Serializable {
 
     private double objectif; // Objectif global de l'agence
 
+    @OneToMany(mappedBy = "agence", cascade = CascadeType.ALL)
+    private List<User> users;
 }
