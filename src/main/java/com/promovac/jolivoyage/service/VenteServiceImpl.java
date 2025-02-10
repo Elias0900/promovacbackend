@@ -9,8 +9,12 @@ import com.promovac.jolivoyage.repository.UserRepository;
 import com.promovac.jolivoyage.repository.VenteRepository;
 import com.promovac.jolivoyage.service.interf.BilanService;
 import com.promovac.jolivoyage.service.interf.VenteService;
+import com.promovac.jolivoyage.specifications.VentesSpecificationsByAgence;
+import com.promovac.jolivoyage.specifications.VentesSpecificationsByUser;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -146,4 +150,40 @@ public class VenteServiceImpl implements VenteService {
         return venteRepository.totalMontantTOForNonFram(tourOperateur);
     }
 
+    @Override
+    public List<Vente> searchVentes(Long userId, String nom, String prenom, String numeroDossier,
+                                    LocalDate dateDepart, LocalDate dateValidation, Boolean assurance,
+                                    String sortBy, String sortDirection) {
+
+        Specification<Vente> spec = Specification
+                .where(VentesSpecificationsByUser.hasUserId(userId))
+                .and(VentesSpecificationsByUser.hasNom(nom))
+                .and(VentesSpecificationsByUser.hasPrenom(prenom))
+                .and(VentesSpecificationsByUser.hasNumeroDossier(numeroDossier))
+                .and(VentesSpecificationsByUser.hasDateDepartAfter(dateDepart))
+                .and(VentesSpecificationsByUser.hasDateValidation(dateValidation))
+                .and(VentesSpecificationsByUser.hasAssurance(assurance));
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
+        return venteRepository.findAll(spec, sort);
+    }
+
+    @Override
+    public List<Vente> searchVentesByAgence(Long agenceId, Long userId, String nomUser, String prenomUser,
+                                            String numeroDossier, LocalDate dateDepart, LocalDate dateValidation,
+                                            Boolean assurance, String sortBy, String sortDirection) {
+
+        Specification<Vente> spec = Specification
+                .where(VentesSpecificationsByAgence.hasAgenceId(agenceId))
+                .and(VentesSpecificationsByAgence.hasUserId(userId))
+                .and(VentesSpecificationsByAgence.hasNomUser(nomUser))
+                .and(VentesSpecificationsByAgence.hasPrenomUser(prenomUser))
+                .and(VentesSpecificationsByAgence.hasNumeroDossier(numeroDossier))
+                .and(VentesSpecificationsByAgence.hasDateDepartAfter(dateDepart))
+                .and(VentesSpecificationsByAgence.hasDateValidation(dateValidation))
+                .and(VentesSpecificationsByAgence.hasAssurance(assurance));
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
+        return venteRepository.findAll(spec, sort);
+    }
 }

@@ -27,9 +27,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
@@ -41,10 +38,22 @@ public class AuthController {
     private final JwtUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
     private final AgenceVoyageRepository agenceVoyageRepository;
-
-
     private final BilanServiceImpl bilanService;
 
+    /**
+     * Inscription d'un nouvel utilisateur.
+     * Vérifie si l'email existe déjà et enregistre un nouvel utilisateur si l'email est unique.
+     *
+     * @param userDTO DTO contenant les informations de l'utilisateur à enregistrer.
+     * @return Une réponse HTTP indiquant si l'enregistrement a réussi ou échoué.
+     */
+    @Operation(summary = "Register a new user",
+            description = "Registers a new user and links them to a specified agency if the email is unique.")
+    @ApiResponse(responseCode = "200", description = "User registered successfully",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = User.class)))
+    @ApiResponse(responseCode = "400", description = "Email is already in use",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     @PostMapping(path = "/register", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> register(@RequestBody UserDTO userDTO) {
         if (userRepository.findByEmail(userDTO.getEmail()) != null) {
@@ -59,13 +68,26 @@ public class AuthController {
         user.setPrenom(userDTO.getPrenom());
         user.setEmail(userDTO.getEmail());
         user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-        user.setRole(userDTO.getRole()); // Si Role est un Enum
+        user.setRole(userDTO.getRole());
         user.setAgence(agence);
 
         return ResponseEntity.ok(userRepository.save(user));
     }
 
-
+    /**
+     * Authentification d'un utilisateur.
+     * Vérifie les informations de connexion et génère un jeton JWT pour l'utilisateur authentifié.
+     *
+     * @param user DTO contenant l'email et le mot de passe de l'utilisateur.
+     * @return Une réponse HTTP contenant un jeton JWT pour un utilisateur authentifié.
+     */
+    @Operation(summary = "Login user",
+            description = "Authenticates a user with their email and password and returns a JWT token.")
+    @ApiResponse(responseCode = "200", description = "User authenticated successfully",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = UserLoginResponseDTO.class)))
+    @ApiResponse(responseCode = "401", description = "Invalid username or password",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
     @PostMapping(path = "/login", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> login(@RequestBody UserLoginResponseDTO user) {
         try {
@@ -102,6 +124,4 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
     }
-
-
 }
