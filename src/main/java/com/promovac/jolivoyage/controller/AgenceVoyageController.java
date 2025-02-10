@@ -16,7 +16,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/agence")
 @Slf4j
-public class AgenceVoyagecontroller {
+public class AgenceVoyageController {
     private final AgenceVoyageRepository agenceVoyageRepository;
 
     private final AgenceVoyageService agenceVoyageService;
