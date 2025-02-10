@@ -5,7 +5,6 @@ import com.promovac.jolivoyage.entity.User;
 import com.promovac.jolivoyage.repository.AgenceVoyageRepository;
 import com.promovac.jolivoyage.service.interf.AgenceVoyageService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -37,16 +36,8 @@ public class AgenceVoyageController {
      * @param request Map contenant la nouvelle valeur de l'objectif.
      * @return La réponse HTTP contenant l'agence mise à jour.
      */
-    @Operation(summary = "Update the objective of an agency",
-            description = "Updates the objective of an existing agency based on its ID.")
-    @ApiResponse(responseCode = "200", description = "Objective updated successfully",
-            content = @Content(mediaType = "application/json",
-                    schema = @Schema(implementation = AgenceVoyage.class)))
-    @ApiResponse(responseCode = "404", description = "Agency not found",
-            content = @Content(mediaType = "application/json"))
     @PatchMapping("/{id}/objectif")
-    public ResponseEntity<?> updateObjectif(@PathVariable Long id,
-                                            @RequestBody Map<String, Double> request) {
+    public ResponseEntity<?> updateObjectif(@PathVariable Long id, @RequestBody Map<String, Double> request) {
         double nouvelObjectif = request.get("objectif"); // Récupérer l’objectif envoyé
 
         AgenceVoyage agence = agenceVoyageRepository.findById(id)
