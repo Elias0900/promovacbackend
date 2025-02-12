@@ -22,6 +22,16 @@ public interface VenteRepository extends JpaRepository<Vente, Long>, JpaSpecific
     List<Vente> findVentesByUserId(@Param("userId") Long userId);
 
     /**
+     * Récupère toutes les ventes effectuées par un utilisateur spécifique.
+     *
+     * @param AgenceId L'ID de l'utilisateur
+     * @return Une liste d'objets Vente associés à l'utilisateur
+     */
+    @Query("SELECT v FROM Vente v WHERE v.user.agence.id = :agenceId")
+    List<Vente> findVentesByAgenceId(@Param("agenceId") Long AgenceId);
+
+
+    /**
      * Calcule le montant total des assurances pour un utilisateur spécifique.
      *
      * @param userId L'ID de l'utilisateur
@@ -211,4 +221,17 @@ public interface VenteRepository extends JpaRepository<Vente, Long>, JpaSpecific
      */
     @Query("select sum(v.totalSansAssurance) from Vente v where v.tourOperateur not like  %:tourOperateur%")
     Double totalMontantTOForNonFram(@Param("tourOperateur") String tourOperateur);
+
+    @Query("SELECT v FROM Vente v WHERE YEAR(v.dateValidation) = YEAR(:lastMonth) " +
+            "AND MONTH(v.dateValidation) = MONTH(:lastMonth) " +
+            "AND v.user.id = :userId")
+    List<Vente> findVentesDuMoisPrecedentByUser(@Param("lastMonth") LocalDate lastMonth,
+                                                @Param("userId") Long userId);
+
+//    @Query("SELECT v FROM Vente v WHERE YEAR(v.dateValidation) = YEAR(:lastMonth) " +
+//            "AND MONTH(v.dateValidation) = MONTH(:lastMonth) " +
+//            "AND v.user.agenceId = :agenceId")
+//    List<Vente> findVentesDuMoisPrecedentPourAgence(@Param("lastMonth") LocalDate lastMonth,
+//                                                  @Param("agenceId") Long agenceId);
+
 }

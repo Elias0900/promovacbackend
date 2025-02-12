@@ -23,6 +23,5 @@ public class AgenceVoyage implements Serializable {
 
     private double objectif; // Objectif global de l'agence
 
-    @OneToMany(mappedBy = "agence", cascade = CascadeType.ALL)
-    private List<User> users;
+
 }

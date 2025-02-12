@@ -1,17 +1,10 @@
 package com.promovac.jolivoyage.controller;
 
+import com.promovac.jolivoyage.dto.AgenceVoyageDTO;
 import com.promovac.jolivoyage.entity.AgenceVoyage;
 import com.promovac.jolivoyage.entity.User;
 import com.promovac.jolivoyage.repository.AgenceVoyageRepository;
 import com.promovac.jolivoyage.service.interf.AgenceVoyageService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import com.promovac.jolivoyage.service.interf.AgenceVoyageService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -38,15 +31,17 @@ public class AgenceVoyageController {
      */
     @PatchMapping("/{id}/objectif")
     public ResponseEntity<?> updateObjectif(@PathVariable Long id, @RequestBody Map<String, Double> request) {
-        double nouvelObjectif = request.get("objectif"); // Récupérer l’objectif envoyé
+        double nouvelObjectif = request.get("objectif");
 
         AgenceVoyage agence = agenceVoyageRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Agence non trouvée avec l'ID : " + id));
 
-        agence.setObjectif(nouvelObjectif); // Modifier l'objectif
-        agenceVoyageRepository.save(agence); // Sauvegarder en base
+        agence.setObjectif(nouvelObjectif);
+        agenceVoyageRepository.save(agence);
 
-        return ResponseEntity.ok(agence);
+        // Retourne le DTO au lieu de l'entité complète
+        return ResponseEntity.ok(AgenceVoyageDTO.mapToDTO(agence)
+        );
     }
 
     @GetMapping(value = "/{agenceId}/users", produces = "application/json")

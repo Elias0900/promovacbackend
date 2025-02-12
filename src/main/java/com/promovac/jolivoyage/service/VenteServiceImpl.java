@@ -9,7 +9,6 @@ import com.promovac.jolivoyage.repository.UserRepository;
 import com.promovac.jolivoyage.repository.VenteRepository;
 import com.promovac.jolivoyage.service.interf.BilanService;
 import com.promovac.jolivoyage.service.interf.VenteService;
-import com.promovac.jolivoyage.specifications.VentesSpecificationsByAgence;
 import com.promovac.jolivoyage.specifications.VentesSpecificationsByUser;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -168,22 +168,45 @@ public class VenteServiceImpl implements VenteService {
         return venteRepository.findAll(spec, sort);
     }
 
+
+    /**
+     * Recherche les ventes en fonction d'un mot-clé sur tous les champs sauf les dates.
+     *
+     * @param keyword Le mot-clé à rechercher.
+     * @return Liste des ventes correspondant au critère de recherche.
+     */
     @Override
-    public List<Vente> searchVentesByAgence(Long agenceId, Long userId, String nomUser, String prenomUser,
-                                            String numeroDossier, LocalDate dateDepart, LocalDate dateValidation,
-                                            Boolean assurance, String sortBy, String sortDirection) {
+    public List<VenteDto> rechercher(String keyword, Long agenceId) {
+        List<Vente> ventes = venteRepository.findVentesByAgenceId(agenceId);
 
-        Specification<Vente> spec = Specification
-                .where(VentesSpecificationsByAgence.hasAgenceId(agenceId))
-                .and(VentesSpecificationsByAgence.hasUserId(userId))
-                .and(VentesSpecificationsByAgence.hasNomUser(nomUser))
-                .and(VentesSpecificationsByAgence.hasPrenomUser(prenomUser))
-                .and(VentesSpecificationsByAgence.hasNumeroDossier(numeroDossier))
-                .and(VentesSpecificationsByAgence.hasDateDepartAfter(dateDepart))
-                .and(VentesSpecificationsByAgence.hasDateValidation(dateValidation))
-                .and(VentesSpecificationsByAgence.hasAssurance(assurance));
-
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
-        return venteRepository.findAll(spec, sort);
+        return ventes.stream()
+                .filter(vente ->
+                        (vente.getNom() != null && vente.getNom().toLowerCase().contains(keyword.toLowerCase())) ||
+                                (vente.getPrenom() != null && vente.getPrenom().toLowerCase().contains(keyword.toLowerCase())) ||
+                                (vente.getNumeroDossier() != null && vente.getNumeroDossier().toLowerCase().contains(keyword.toLowerCase())) ||
+                                (vente.getTourOperateur() != null && vente.getTourOperateur().toLowerCase().contains(keyword.toLowerCase())) ||
+                                (vente.getVenteTotal() != null && vente.getVenteTotal().toString().contains(keyword)) ||
+                                (String.valueOf(vente.getPax()).contains(keyword)) ||
+                                (String.valueOf(vente.isAssurance()).contains(keyword)) ||
+                                (String.valueOf(vente.getMontantAssurance()).contains(keyword)) ||
+                                (String.valueOf(vente.getFraisAgence()).contains(keyword)) ||
+                                (String.valueOf(vente.getTotalSansAssurance()).contains(keyword))
+                )
+                .map(VenteDto::fromEntity)
+                .collect(Collectors.toList());
     }
+    @Override
+    public List<VenteDto> getVentesDuMoisPrecedentByUser(Long userId) {
+        LocalDate lastMonth = LocalDate.now().minusMonths(1).withDayOfMonth(1);
+        List<Vente> ventes = venteRepository.findVentesDuMoisPrecedentByUser(lastMonth, userId);
+        return ventes.stream().map(VenteDto::fromEntity).collect(Collectors.toList());
+    }
+
+//    public List<VenteDto> getVentesDuMoisPrecedentByAgence(Long agenceId) {
+//        LocalDate lastMonth = LocalDate.now().minusMonths(1).withDayOfMonth(1);
+//        List<Vente> ventes = venteRepository.findVentesDuMoisPrecedentPourAgence(lastMonth, agenceId);
+//        return ventes.stream().map(VenteDto::fromEntity).collect(Collectors.toList());
+//    }
+
 }
+

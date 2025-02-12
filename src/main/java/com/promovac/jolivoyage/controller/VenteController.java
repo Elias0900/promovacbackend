@@ -292,35 +292,17 @@ public class VenteController {
         return ResponseEntity.ok().body(venteService.searchVentes(userId, nom, prenom, numeroDossier, dateDepart, dateValidation, assurance, sortBy, sortDirection));
     }
 
-    /**
-     * Recherche des ventes pour une agence avec différents critères de filtrage.
-     * Cette méthode permet de rechercher des ventes dans une agence spécifique avec des critères filtrés (similaire à la méthode précédente mais pour une agence).
-     *
-     * @param agenceId L'ID de l'agence pour laquelle on recherche les ventes.
-     * @param userId L'ID de l'utilisateur associé aux ventes (optionnel).
-     * @param nomUser Le nom de l'utilisateur (optionnel).
-     * @param prenomUser Le prénom de l'utilisateur (optionnel).
-     * @param numeroDossier Le numéro de dossier des ventes (optionnel).
-     * @param dateDepart La date de départ des ventes (optionnel).
-     * @param dateValidation La date de validation des ventes (optionnel).
-     * @param assurance Indicateur si une assurance a été souscrite (optionnel).
-     * @param sortBy Le champ par lequel trier (optionnel).
-     * @param sortDirection Le sens du tri (optionnel).
-     * @return Une liste de ventes pour l'agence correspondant aux critères de recherche.
-     */
-    @GetMapping("/agence/{agenceId}/search")
-    public ResponseEntity<List<Vente>> searchVentesByAgence(
-            @PathVariable Long agenceId,
-            @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) String nomUser,
-            @RequestParam(required = false) String prenomUser,
-            @RequestParam(required = false) String numeroDossier,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateDepart,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateValidation,
-            @RequestParam(required = false) Boolean assurance,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "ASC") String sortDirection
+
+    @GetMapping(value = "/agence/{agenceId}/search", produces = "application/json")
+    public ResponseEntity<List<VenteDto>> searchVentesByAgence(
+        @PathVariable Long agenceId,
+        @RequestParam(required = false) String recherche
     ) {
-        return ResponseEntity.ok().body(venteService.searchVentesByAgence(agenceId, userId, nomUser, prenomUser, numeroDossier, dateDepart, dateValidation, assurance, sortBy, sortDirection));
+        return ResponseEntity.ok().body(venteService.rechercher(recherche,agenceId));
+    }
+
+    @GetMapping(value = "/ventes-du-mois/{userId}", produces = "application/json")
+    public ResponseEntity<List<VenteDto>> ventesDuMois(@PathVariable Long userId) {
+        return ResponseEntity.ok().body(venteService.getVentesDuMoisPrecedentByUser(userId));
     }
 }

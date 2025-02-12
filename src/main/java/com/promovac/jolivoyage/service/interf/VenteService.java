@@ -158,22 +158,8 @@ public interface VenteService {
                              LocalDate dateDepart, LocalDate dateValidation, Boolean assurance,
                              String sortBy, String sortDirection);
 
-    /**
-     * Recherche des ventes basées sur des critères spécifiques à une agence.
-     *
-     * @param agenceId L'ID de l'agence.
-     * @param userId L'ID de l'utilisateur.
-     * @param nomUser Le nom de l'utilisateur.
-     * @param prenomUser Le prénom de l'utilisateur.
-     * @param numeroDossier Le numéro de dossier.
-     * @param dateDepart La date de départ.
-     * @param dateValidation La date de validation.
-     * @param assurance Filtre sur l'assurance.
-     * @param sortBy Critère de tri.
-     * @param sortDirection Direction du tri.
-     * @return Liste des ventes correspondant aux critères de recherche pour l'agence spécifiée.
-     */
-    List<Vente> searchVentesByAgence(Long agenceId, Long userId, String nomUser, String prenomUser,
-                                     String numeroDossier, LocalDate dateDepart, LocalDate dateValidation,
-                                     Boolean assurance, String sortBy, String sortDirection);
+
+    List<VenteDto> rechercher(String keyword, Long agenceId);
+
+    List<VenteDto> getVentesDuMoisPrecedentByUser(Long userId);
 }
