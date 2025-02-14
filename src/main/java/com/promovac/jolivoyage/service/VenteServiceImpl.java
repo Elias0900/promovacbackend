@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,6 +35,8 @@ public class VenteServiceImpl implements VenteService {
 
     @Autowired
     private BilanService bilanService;
+
+    private YearMonth moisActuel = YearMonth.now();
 
     @Override
     public List<VenteDto> findAll() {
@@ -52,6 +55,7 @@ public class VenteServiceImpl implements VenteService {
 
     @Override
     public VenteDto saveOrUpdateVente(VenteDto venteDto) {
+        YearMonth moisActuel = YearMonth.now();
         // Charger l'utilisateur depuis la base de données
         User user = myAppUserRepository.findById(venteDto.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable avec l'ID : " + venteDto.getUserId()));
@@ -60,11 +64,11 @@ public class VenteServiceImpl implements VenteService {
         Vente vente = VenteDto.toEntity(venteDto);
         vente.setUser(user); // Associer l'utilisateur chargé
         vente.setTotalSansAssurance(vente.getVenteTotal().doubleValue() - vente.getMontantAssurance());
+        vente.setTransactionDate(moisActuel);
 
         // Sauvegarder la vente
         Vente savedVente = venteRepository.save(vente);
 
-        bilanService.saveOrUpdateBilan(user.getId());
         // Retourner le DTO
         return VenteDto.fromEntity(savedVente);
     }
@@ -80,18 +84,18 @@ public class VenteServiceImpl implements VenteService {
 
     @Override
     public Double totalMontantAssuranceByUserId(Long userId) {
-        return venteRepository.totalMontantAssuranceByUserId(userId);
+        return venteRepository.totalMontantAssuranceByUserId(userId, moisActuel);
     }
 
     @Override
     public Double totalMontantTOByUserIdForFramContaining(Long userId, String tourOperateur) {
-        return venteRepository.totalMontantTOByUserIdForFramContaining(userId, "%" + "FRAM" + "%");
+        return venteRepository.totalMontantTOByUserIdForFramContaining(userId, "%" + "FRAM" + "%", moisActuel);
 
     }
 
     @Override
     public Double totalMontantTOByUserIdForNonFram(Long userId, String tourOperateur) {
-        return venteRepository.totalMontantTOByUserIdForNonFram(userId, "%" + "FRAM" + "%");
+        return venteRepository.totalMontantTOByUserIdForNonFram(userId, "%" + "FRAM" + "%", moisActuel);
 
     }
 

@@ -15,9 +15,11 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.YearMonth;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -42,27 +44,26 @@ public class BilanServiceImpl implements BilanService {
         User user = myAppUserRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable avec l'ID : " + userId));
 
-        // Rechercher le bilan de l'utilisateur, ou en créer un nouveau si non trouvé
-        Bilan bilan = bilanRepository.findByUserId(userId).orElseGet(Bilan::new);
+        YearMonth moisActuel = YearMonth.now();
 
-        // Associer l'utilisateur au bilan
-        bilan.setUser(user);
+        // Vérifier si un bilan existe pour cet utilisateur et ce mois
+        Bilan bilan = bilanRepository.findByUserIdAndMoisBilan(userId, moisActuel)
+                .orElseGet(() -> {
+                    Bilan nouveauBilan = new Bilan();
+                    nouveauBilan.setUser(user);
+                    nouveauBilan.setMoisBilan(moisActuel);
+                    return nouveauBilan;
+                });
 
         // Calculs des montants avec gestion des valeurs nulles
-        double framCroisieres = venteRepository.totalMontantTOByUserIdForFramContaining(user.getId(), "%" + "FRAM" + "%") != null
-                ? venteRepository.totalMontantTOByUserIdForFramContaining(user.getId(), "%" + "FRAM" + "%") : 0.0;
-        double autresTo = venteRepository.totalMontantTOByUserIdForNonFram(user.getId(), "%" + "FRAM" + "%") != null
-                ? venteRepository.totalMontantTOByUserIdForNonFram(user.getId(), "%" + "FRAM" + "%") : 0.0;
-        double realise = venteRepository.totalMontant(user.getId()) != null
-                ? venteRepository.totalMontant(user.getId()) : 0.0;
-        double objectif = 100000;
-        double montantAssurance = venteRepository.totalMontantAssuranceByUserId(user.getId()) != null
-                ? venteRepository.totalMontantAssuranceByUserId(user.getId()) : 0.0;
-        double nombreAssurance = venteRepository.countAssuranceSouscriteByUserId(user.getId()) != null
-                ? venteRepository.countAssuranceSouscriteByUserId(user.getId()) : 0.0;
+        double framCroisieres = Optional.ofNullable(venteRepository.totalMontantTOByUserIdForFramContaining(user.getId(), "%" + "FRAM" + "%", moisActuel)).orElse(0.0);
+        double autresTo = Optional.ofNullable(venteRepository.totalMontantTOByUserIdForNonFram(user.getId(), "%" + "FRAM" + "%", moisActuel)).orElse(0.0);
+        double realise = Optional.ofNullable(venteRepository.totalMontant(user.getId(), moisActuel)).orElse(0.0);
+        double montantAssurance = Optional.ofNullable(venteRepository.totalMontantAssuranceByUserId(user.getId(), moisActuel)).orElse(0.0);
+        double nombreAssurance = Optional.ofNullable(venteRepository.countAssuranceSouscriteByUserId(user.getId(), moisActuel)).orElse(0L);
+        double nombreVente = Optional.ofNullable(venteRepository.countVentesByUserId(user.getId())).orElse(0.0);
 
-        double nombreVente = venteRepository.countVentesByUserId(user.getId()) != null
-                ? venteRepository.countVentesByUserId(user.getId()) : 0.0;
+        double objectif = 100000; // Objectif défini
 
         // Mise à jour des valeurs du bilan
         bilan.setFramCroisieres(framCroisieres);
@@ -74,28 +75,24 @@ public class BilanServiceImpl implements BilanService {
         // Calcul des pourcentages
         bilan.setPourcentageRealise(realise / objectif);
         bilan.setPourcentageFram(framCroisieres / objectif);
-        bilan.setPourcentageAssurance(nombreAssurance / nombreVente);
+        bilan.setPourcentageAssurance(nombreVente != 0 ? nombreAssurance / nombreVente : 0.0);
 
         // Calcul des primes
-        if (bilan.getPourcentageRealise() >= 1.0) {
-            bilan.setTotalPrimesFram(framCroisieres / 1.2 * 0.01);
-            bilan.setTotalPrimesAutre(autresTo / 1.2 * 0.005);
-            bilan.setTotalPrimesAss(montantAssurance / 1.2 * 0.01);
-        } else {
-            bilan.setTotalPrimesFram(framCroisieres / 1.2 * 0.01 * 0.8);
-            bilan.setTotalPrimesAutre(autresTo / 1.2 * 0.005 * 0.8);
-            bilan.setTotalPrimesAss(montantAssurance / 1.2 * 0.01 * 0.8);
-        }
+        double primeFactor = bilan.getPourcentageRealise() >= 1.0 ? 1.0 : 0.8;
+        bilan.setTotalPrimesFram(framCroisieres / 1.2 * 0.01 * primeFactor);
+        bilan.setTotalPrimesAutre(autresTo / 1.2 * 0.005 * primeFactor);
+        bilan.setTotalPrimesAss(montantAssurance / 1.2 * 0.01 * primeFactor);
 
         // Calcul du total des primes brutes
-        bilan.setTotalPrimesBrutes(bilan.getTotalPrimesAutre() + bilan.getTotalPrimesFram() + bilan.getTotalPrimesAss());
+        bilan.setTotalPrimesBrutes(bilan.getTotalPrimesFram() + bilan.getTotalPrimesAutre() + bilan.getTotalPrimesAss());
 
-        // Sauvegarder ou mettre à jour le bilan
+        // Sauvegarder le bilan
         bilan = bilanRepository.save(bilan);
 
         // Retourner le DTO
         return BilanDto.fromEntity(bilan);
     }
+
 
 
     @Override

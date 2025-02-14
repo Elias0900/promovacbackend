@@ -3,6 +3,7 @@ package com.promovac.jolivoyage.service.interf;
 import com.promovac.jolivoyage.dto.BilanDto;
 import com.promovac.jolivoyage.entity.Bilan;
 
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
 

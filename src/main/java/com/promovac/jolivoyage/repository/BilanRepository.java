@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +27,8 @@ public interface BilanRepository extends JpaRepository<Bilan, Long> {
      */
     @Query("SELECT b FROM Bilan b WHERE b.user.agence.id = :agenceId")
     List<Bilan> findByAgenceId(@Param("agenceId") Long agenceId);
+
+    Optional<Bilan> findByUserIdAndMoisBilan(Long userId, YearMonth moisActuel);
 
     // Si tu veux ajouter d'autres méthodes comme par date ou par statut, voici un exemple :
     // @Query("SELECT b FROM Bilan b WHERE b.date >= :startDate AND b.date <= :endDate")

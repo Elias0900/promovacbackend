@@ -23,11 +23,11 @@ public class BilanController {
      * @param userId L'ID de l'utilisateur pour lequel le bilan doit être créé ou mis à jour.
      * @return Le bilan sauvegardé ou mis à jour.
      */
-    @PostMapping("/user/{userId}")
-    public ResponseEntity<BilanDto> saveOrUpdateBilan(@PathVariable Long userId) {
-        BilanDto bilanDto = bilanService.saveOrUpdateBilan(userId);
-        return ResponseEntity.ok(bilanDto);
-    }
+//    @PostMapping("/user/{userId}")
+//    public ResponseEntity<BilanDto> saveOrUpdateBilan(@PathVariable Long userId) {
+////        BilanDto bilanDto = bilanService.saveOrUpdateBilan(userId);
+////        return ResponseEntity.ok(bilanDto);
+//    }
 
     /**
      * Récupère un bilan par son ID.
