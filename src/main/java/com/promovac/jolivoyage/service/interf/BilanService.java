@@ -1,10 +1,8 @@
 package com.promovac.jolivoyage.service.interf;
 
 import com.promovac.jolivoyage.dto.BilanDto;
-import com.promovac.jolivoyage.entity.Bilan;
 
 import java.time.YearMonth;
-import java.util.List;
 import java.util.Map;
 
 public interface BilanService {
@@ -13,9 +11,8 @@ public interface BilanService {
      * Crée ou met à jour un Bilan pour un utilisateur donné.
      *
      * @param userId L'ID de l'utilisateur pour lequel le bilan doit être créé ou mis à jour.
-     * @return Le Bilan créé ou mis à jour sous forme de DTO.
      */
-    BilanDto saveOrUpdateBilan(Long userId);
+    void saveOrUpdateBilan(Long userId, YearMonth moisActuel);
 
     /**
      * Récupère un Bilan par son ID.
@@ -47,4 +44,6 @@ public interface BilanService {
      * @return Un Map contenant des informations détaillées sur le Bilan pour l'agence spécifiée.
      */
     Map<String, Object> getBilanByAgence(Long agenceId);
+
+    BilanDto getBilanByMoisAndUserId(Long userId, YearMonth choisirMois);
 }

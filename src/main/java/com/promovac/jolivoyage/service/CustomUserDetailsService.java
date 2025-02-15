@@ -1,5 +1,6 @@
 package com.promovac.jolivoyage.service;
 
+import com.promovac.jolivoyage.dto.UserDTO;
 import com.promovac.jolivoyage.entity.User;
 import com.promovac.jolivoyage.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +29,11 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
         return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(),
                 Collections.singletonList(new SimpleGrantedAuthority(user.getRole())));
+    }
+
+    public UserDTO getUserById(long userId){
+        Optional<User> user = userRepository.findById(userId);
+        return user.map(UserDTO::fromEntity).orElse(null);
     }
 
 }

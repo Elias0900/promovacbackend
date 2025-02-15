@@ -60,6 +60,8 @@ public class VenteServiceImpl implements VenteService {
         User user = myAppUserRepository.findById(venteDto.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable avec l'ID : " + venteDto.getUserId()));
 
+        YearMonth testmois = YearMonth.now();
+
         // Convertir le DTO en entité
         Vente vente = VenteDto.toEntity(venteDto);
         vente.setUser(user); // Associer l'utilisateur chargé
@@ -68,6 +70,8 @@ public class VenteServiceImpl implements VenteService {
 
         // Sauvegarder la vente
         Vente savedVente = venteRepository.save(vente);
+        bilanService.saveOrUpdateBilan(user.getId(), moisActuel);
+
 
         // Retourner le DTO
         return VenteDto.fromEntity(savedVente);

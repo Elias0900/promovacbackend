@@ -39,58 +39,64 @@ public class BilanServiceImpl implements BilanService {
     private UserRepository myAppUserRepository;
 
     @Override
-    public BilanDto saveOrUpdateBilan(Long userId) {
-        // Récupérer l'utilisateur
+    public void saveOrUpdateBilan(Long userId, YearMonth mois) {
         User user = myAppUserRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable avec l'ID : " + userId));
 
-        YearMonth moisActuel = YearMonth.now();
-
-        // Vérifier si un bilan existe pour cet utilisateur et ce mois
-        Bilan bilan = bilanRepository.findByUserIdAndMoisBilan(userId, moisActuel)
+        // Rechercher un bilan existant pour le mois donné ou en créer un nouveau
+        Bilan bilan = bilanRepository.findByUserIdAndMoisBilan(userId, mois)
                 .orElseGet(() -> {
-                    Bilan nouveauBilan = new Bilan();
-                    nouveauBilan.setUser(user);
-                    nouveauBilan.setMoisBilan(moisActuel);
-                    return nouveauBilan;
+                    Bilan newBilan = new Bilan();
+                    newBilan.setUser(user);
+                    newBilan.setMoisBilan(mois);
+                    return newBilan;
                 });
 
-        // Calculs des montants avec gestion des valeurs nulles
-        double framCroisieres = Optional.ofNullable(venteRepository.totalMontantTOByUserIdForFramContaining(user.getId(), "%" + "FRAM" + "%", moisActuel)).orElse(0.0);
-        double autresTo = Optional.ofNullable(venteRepository.totalMontantTOByUserIdForNonFram(user.getId(), "%" + "FRAM" + "%", moisActuel)).orElse(0.0);
-        double realise = Optional.ofNullable(venteRepository.totalMontant(user.getId(), moisActuel)).orElse(0.0);
-        double montantAssurance = Optional.ofNullable(venteRepository.totalMontantAssuranceByUserId(user.getId(), moisActuel)).orElse(0.0);
-        double nombreAssurance = Optional.ofNullable(venteRepository.countAssuranceSouscriteByUserId(user.getId(), moisActuel)).orElse(0L);
-        double nombreVente = Optional.ofNullable(venteRepository.countVentesByUserId(user.getId())).orElse(0.0);
+        // Mise à jour des valeurs du bilan avec les nouvelles ventes
+        double framCroisieres = Optional.ofNullable(venteRepository.totalMontantTOByUserIdForFramContaining(user.getId(), "FRAM", mois))
+                .orElse(0.0);
 
-        double objectif = 100000; // Objectif défini
+        double autresTo = Optional.ofNullable(venteRepository.totalMontantTOByUserIdForNonFram(user.getId(), "FRAM", mois))
+                .orElse(0.0);
 
-        // Mise à jour des valeurs du bilan
+        double realise = Optional.ofNullable(venteRepository.totalMontant(user.getId(), mois))
+                .orElse(0.0);
+
+        double montantAssurance = Optional.ofNullable(venteRepository.totalMontantAssuranceByUserId(user.getId(), mois))
+                .orElse(0.0);
+
+        double nombreAssurance = Optional.ofNullable(venteRepository.countAssuranceSouscriteByUserId(user.getId(), mois))
+                .orElse(0L);
+
+        double nombreVente = Optional.ofNullable(venteRepository.countVentesByUserId(user.getId()))
+                .orElse(0.0);
+
+
         bilan.setFramCroisieres(framCroisieres);
         bilan.setAutresTo(autresTo);
         bilan.setRealise(realise);
-        bilan.setObjectif(objectif);
         bilan.setAssurances(nombreAssurance);
+        bilan.setObjectif(100000.0);
 
-        // Calcul des pourcentages
-        bilan.setPourcentageRealise(realise / objectif);
-        bilan.setPourcentageFram(framCroisieres / objectif);
-        bilan.setPourcentageAssurance(nombreVente != 0 ? nombreAssurance / nombreVente : 0.0);
+        bilan.setPourcentageRealise(realise / bilan.getObjectif());
+        bilan.setPourcentageFram(framCroisieres / bilan.getObjectif());
+        bilan.setPourcentageAssurance(nombreVente != 0 ? nombreAssurance / nombreVente : 0);
 
-        // Calcul des primes
-        double primeFactor = bilan.getPourcentageRealise() >= 1.0 ? 1.0 : 0.8;
-        bilan.setTotalPrimesFram(framCroisieres / 1.2 * 0.01 * primeFactor);
-        bilan.setTotalPrimesAutre(autresTo / 1.2 * 0.005 * primeFactor);
-        bilan.setTotalPrimesAss(montantAssurance / 1.2 * 0.01 * primeFactor);
+        if (bilan.getPourcentageRealise() >= 1.0) {
+            bilan.setTotalPrimesFram(framCroisieres / 1.2 * 0.01);
+            bilan.setTotalPrimesAutre(autresTo / 1.2 * 0.005);
+            bilan.setTotalPrimesAss(montantAssurance / 1.2 * 0.01);
+        } else {
+            bilan.setTotalPrimesFram(framCroisieres / 1.2 * 0.01 * 0.8);
+            bilan.setTotalPrimesAutre(autresTo / 1.2 * 0.005 * 0.8);
+            bilan.setTotalPrimesAss(montantAssurance / 1.2 * 0.01 * 0.8);
+        }
 
-        // Calcul du total des primes brutes
-        bilan.setTotalPrimesBrutes(bilan.getTotalPrimesFram() + bilan.getTotalPrimesAutre() + bilan.getTotalPrimesAss());
+        bilan.setTotalPrimesBrutes(bilan.getTotalPrimesAutre() + bilan.getTotalPrimesFram() + bilan.getTotalPrimesAss());
 
-        // Sauvegarder le bilan
         bilan = bilanRepository.save(bilan);
 
-        // Retourner le DTO
-        return BilanDto.fromEntity(bilan);
+        BilanDto.fromEntity(bilan);
     }
 
 
@@ -115,7 +121,8 @@ public class BilanServiceImpl implements BilanService {
 
     @Override
     public BilanDto getBilanByUserId(Long id) {
-        Bilan bilan = bilanRepository.findByUserId(id)
+        YearMonth moisPrecedent = YearMonth.now();
+        Bilan bilan = bilanRepository.findByUserIdAndMoisBilan(id, moisPrecedent.minusMonths(1))
                 .orElseThrow(() -> new RuntimeException("Bilan non trouvé"));
         return BilanDto.fromEntity(bilan); // Retourner le DTO
     }
@@ -145,5 +152,11 @@ public class BilanServiceImpl implements BilanService {
         bilanAgence.put("bilans", bilans); // Liste des bilans individuels
 
         return bilanAgence;
+    }
+
+    @Override
+    public BilanDto getBilanByMoisAndUserId(Long userId, YearMonth choisirMois){
+        Optional<Bilan> bilan = bilanRepository.findByUserIdAndMoisBilan(userId, choisirMois);
+        return bilan.map(BilanDto::fromEntity).orElse(null);
     }
 }

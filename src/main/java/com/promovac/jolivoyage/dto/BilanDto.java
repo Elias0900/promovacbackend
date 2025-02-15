@@ -21,6 +21,8 @@ public class BilanDto {
     private double autresTo; // AUTRES TO
     private double assurances; // ASSURANCES
     private double totalPrimesBrutes; // TOTAL PRIMES BRUTES
+    private String vendeurNom;
+    private String vendeurPrenom;
     private Long userId; // Identifiant de l'utilisateur associé
 
     public static BilanDto fromEntity(Bilan bilan) {
@@ -38,6 +40,8 @@ public class BilanDto {
                 .autresTo(bilan.getAutresTo())
                 .assurances(bilan.getAssurances())
                 .totalPrimesBrutes(bilan.getTotalPrimesBrutes())
+                .vendeurNom(bilan.getUser().getNom())
+                .vendeurPrenom(bilan.getUser().getPrenom())
                 .userId(bilan.getUser() != null ? bilan.getUser().getId() : null)
                 .build();
     }
