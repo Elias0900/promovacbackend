@@ -205,8 +205,8 @@ public class VenteServiceImpl implements VenteService {
     }
     @Override
     public List<VenteDto> getVentesDuMoisPrecedentByUser(Long userId) {
-        LocalDate lastMonth = LocalDate.now().minusMonths(1).withDayOfMonth(1);
-        List<Vente> ventes = venteRepository.findVentesDuMoisPrecedentByUser(lastMonth, userId);
+        YearMonth lastMonth = YearMonth.now();
+        List<Vente> ventes = venteRepository.findVentesDuMoisPrecedentByUser(lastMonth.minusMonths(1), userId);
         return ventes.stream().map(VenteDto::fromEntity).collect(Collectors.toList());
     }
 
