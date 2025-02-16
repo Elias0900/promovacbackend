@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 
 @Data
 @AllArgsConstructor
@@ -65,7 +66,7 @@ public class Vente implements Serializable {
     private boolean assurance; // Indique si une assurance a été souscrite
 
     @Column(updatable = false)
-    private LocalDateTime transactionDate; // Date et heure de la transaction
+    private YearMonth transactionDate; // Mois de la transaction
 
     @ManyToOne
     @JoinColumn(name = "id_user", nullable = false)

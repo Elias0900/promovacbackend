@@ -7,6 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Year;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
 
@@ -23,11 +27,11 @@ public class BilanController {
      * @param userId L'ID de l'utilisateur pour lequel le bilan doit être créé ou mis à jour.
      * @return Le bilan sauvegardé ou mis à jour.
      */
-    @PostMapping("/user/{userId}")
-    public ResponseEntity<BilanDto> saveOrUpdateBilan(@PathVariable Long userId) {
-        BilanDto bilanDto = bilanService.saveOrUpdateBilan(userId);
-        return ResponseEntity.ok(bilanDto);
-    }
+//    @PostMapping("/user/{userId}")
+//    public ResponseEntity<BilanDto> saveOrUpdateBilan(@PathVariable Long userId) {
+////        BilanDto bilanDto = bilanService.saveOrUpdateBilan(userId);
+////        return ResponseEntity.ok(bilanDto);
+//    }
 
     /**
      * Récupère un bilan par son ID.
@@ -35,11 +39,17 @@ public class BilanController {
      * @param id L'ID du bilan à récupérer.
      * @return Le bilan correspondant à l'ID fourni.
      */
-    @GetMapping("/{id}")
-    public ResponseEntity<BilanDto> getBilanById(@PathVariable Long id) {
-        BilanDto bilanDto = bilanService.getBilanById(id);
+
+
+    @GetMapping(value = "/{id}/mois/{mois}", produces = "application/json")
+    public ResponseEntity<BilanDto> getBilanByUserIdAndMois(@PathVariable Long id, @PathVariable String mois) {
+        YearMonth yearMonth = YearMonth.parse(mois, DateTimeFormatter.ofPattern("yyyy-MM"));
+        BilanDto bilanDto = bilanService.getBilanByMoisAndUserId(id, yearMonth);
         return ResponseEntity.ok(bilanDto);
     }
+
+
+
 
     /**
      * Récupère un bilan par l'ID de l'utilisateur.
@@ -48,7 +58,7 @@ public class BilanController {
      * @return Le bilan de l'utilisateur.
      */
     @GetMapping(path = "/user/{id}", produces = "application/json")
-    public ResponseEntity<BilanDto> getBilanByUserId(@PathVariable Long id) {
+    public ResponseEntity<BilanDto> getBilanByUserIdAndMoisMinus(@PathVariable Long id) {
         BilanDto bilanDto = bilanService.getBilanByUserId(id);
         return ResponseEntity.ok(bilanDto);
     }

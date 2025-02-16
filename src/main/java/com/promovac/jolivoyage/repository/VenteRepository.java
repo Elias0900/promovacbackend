@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 public interface VenteRepository extends JpaRepository<Vente, Long>, JpaSpecificationExecutor<Vente> {
@@ -22,53 +23,68 @@ public interface VenteRepository extends JpaRepository<Vente, Long>, JpaSpecific
     List<Vente> findVentesByUserId(@Param("userId") Long userId);
 
     /**
-     * Calcule le montant total des assurances pour un utilisateur spécifique.
+     * Récupère toutes les ventes effectuées par un utilisateur spécifique.
      *
-     * @param userId L'ID de l'utilisateur
-     * @return Le montant total des assurances souscrites par l'utilisateur
+     * @param AgenceId L'ID de l'utilisateur
+     * @return Une liste d'objets Vente associés à l'utilisateur
      */
-    @Query("select sum(v.montantAssurance) from Vente v where v.user.id = :userId")
-    Double totalMontantAssuranceByUserId(@Param("userId") Long userId);
+    @Query("SELECT v FROM Vente v WHERE v.user.agence.id = :agenceId")
+    List<Vente> findVentesByAgenceId(@Param("agenceId") Long AgenceId);
+
 
     /**
-     * Compte le nombre d'assurances souscrites par un utilisateur spécifique.
+     * Calcule le montant total des assurances pour un utilisateur spécifique sur un mois donné.
      *
      * @param userId L'ID de l'utilisateur
-     * @return Le nombre d'assurances souscrites par l'utilisateur
+     * @param transactionDate La date de la transaction sous forme de `YearMonth`
+     * @return Le montant total des assurances souscrites par l'utilisateur sur le mois donné
      */
-    @Query("select count(v) from Vente v where v.user.id = :userId and v.assurance = true")
-    Double countAssuranceSouscriteByUserId(@Param("userId") Long userId);
+    @Query("select sum(v.montantAssurance) from Vente v where v.user.id = :userId and v.transactionDate = :transactionDate")
+    Double totalMontantAssuranceByUserId(@Param("userId") Long userId, @Param("transactionDate") YearMonth transactionDate);
 
     /**
-     * Calcule le montant total des ventes réalisées par un utilisateur spécifique.
+     * Compte le nombre d'assurances souscrites par un utilisateur spécifique sur un mois donné.
      *
      * @param userId L'ID de l'utilisateur
-     * @return Le montant total des ventes réalisées par l'utilisateur
+     * @param transactionDate La date de la transaction sous forme de `YearMonth`
+     * @return Le nombre d'assurances souscrites par l'utilisateur sur le mois donné
      */
-    @Query("select sum(v.venteTotal) from Vente v where v.user.id = :userId")
-    Double totalMontant(@Param("userId") Long userId);
+    @Query("select count(v) from Vente v where v.user.id = :userId and v.assurance = true and v.transactionDate = :transactionDate")
+    Long countAssuranceSouscriteByUserId(@Param("userId") Long userId, @Param("transactionDate") YearMonth transactionDate);
 
     /**
-     * Calcule le montant total des ventes sans assurance pour un utilisateur spécifique,
+     * Calcule le montant total des ventes réalisées par un utilisateur spécifique sur un mois donné.
+     *
+     * @param userId L'ID de l'utilisateur
+     * @param transactionDate La date de la transaction sous forme de `YearMonth`
+     * @return Le montant total des ventes réalisées par l'utilisateur sur le mois donné
+     */
+    @Query("select sum(v.venteTotal) from Vente v where v.user.id = :userId and v.transactionDate = :transactionDate")
+    Double totalMontant(@Param("userId") Long userId, @Param("transactionDate") YearMonth transactionDate);
+
+    /**
+     * Calcule le montant total des ventes sans assurance pour un utilisateur spécifique sur un mois donné,
      * filtré par un tour opérateur spécifique (contenant le nom du tour opérateur).
      *
      * @param userId L'ID de l'utilisateur
      * @param tourOperateur Le nom du tour opérateur
-     * @return Le montant total des ventes sans assurance filtrées par le tour opérateur
+     * @param transactionDate La date de la transaction sous forme de `YearMonth`
+     * @return Le montant total des ventes sans assurance filtrées par le tour opérateur sur le mois donné
      */
-    @Query("select sum(v.totalSansAssurance) from Vente v where v.user.id = :userId and v.tourOperateur like %:tourOperateur%")
-    Double totalMontantTOByUserIdForFramContaining(@Param("userId") Long userId, @Param("tourOperateur") String tourOperateur);
+    @Query("select sum(v.totalSansAssurance) from Vente v where v.user.id = :userId and v.tourOperateur like %:tourOperateur% and v.transactionDate = :transactionDate")
+    Double totalMontantTOByUserIdForFramContaining(@Param("userId") Long userId, @Param("tourOperateur") String tourOperateur, @Param("transactionDate") YearMonth transactionDate);
 
     /**
-     * Calcule le montant total des ventes sans assurance pour un utilisateur spécifique,
+     * Calcule le montant total des ventes sans assurance pour un utilisateur spécifique sur un mois donné,
      * excluant un tour opérateur spécifique.
      *
      * @param userId L'ID de l'utilisateur
      * @param tourOperateur Le nom du tour opérateur
-     * @return Le montant total des ventes sans assurance excluant le tour opérateur spécifié
+     * @param transactionDate La date de la transaction sous forme de `YearMonth`
+     * @return Le montant total des ventes sans assurance excluant le tour opérateur spécifié sur le mois donné
      */
-    @Query("select sum(v.totalSansAssurance) from Vente v where v.user.id = :userId and v.tourOperateur not like %:tourOperateur%")
-    Double totalMontantTOByUserIdForNonFram(@Param("userId") Long userId,  @Param("tourOperateur") String tourOperateur);
+    @Query("select sum(v.totalSansAssurance) from Vente v where v.user.id = :userId and v.tourOperateur not like %:tourOperateur% and v.transactionDate = :transactionDate")
+    Double totalMontantTOByUserIdForNonFram(@Param("userId") Long userId, @Param("tourOperateur") String tourOperateur, @Param("transactionDate") YearMonth transactionDate);
 
     /**
      * Récupère les ventes par jour dans une période spécifique.
@@ -211,4 +227,15 @@ public interface VenteRepository extends JpaRepository<Vente, Long>, JpaSpecific
      */
     @Query("select sum(v.totalSansAssurance) from Vente v where v.tourOperateur not like  %:tourOperateur%")
     Double totalMontantTOForNonFram(@Param("tourOperateur") String tourOperateur);
+
+    @Query("SELECT v FROM Vente v WHERE v.transactionDate = :transactionDate AND v.user.id = :userId")
+    List<Vente> findVentesDuMoisPrecedentByUser(@Param("transactionDate ") YearMonth lastMonth,
+                                                @Param("userId") Long userId);
+
+//    @Query("SELECT v FROM Vente v WHERE YEAR(v.dateValidation) = YEAR(:lastMonth) " +
+//            "AND MONTH(v.dateValidation) = MONTH(:lastMonth) " +
+//            "AND v.user.agenceId = :agenceId")
+//    List<Vente> findVentesDuMoisPrecedentPourAgence(@Param("lastMonth") LocalDate lastMonth,
+//                                                  @Param("agenceId") Long agenceId);
+
 }

@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 
 @Getter
 @Setter
@@ -28,8 +29,11 @@ public class VenteDto {
     private double montantAssurance; // Montant de l'assurance
     private double fraisAgence; // Frais d'agence
     private double totalSansAssurance;
+    private YearMonth transactionDate;
 
     private Long userId; // ID de l'utilisateur associé
+    private String vendeurNom;
+    private String vendeurPrenom;
 
     /**
      * Convertit une entité `Vente` en un DTO `VenteDto`.
@@ -56,7 +60,10 @@ public class VenteDto {
                 .montantAssurance(vente.getMontantAssurance())
                 .fraisAgence(vente.getFraisAgence())
                 .totalSansAssurance(vente.getTotalSansAssurance())
+                .transactionDate(vente.getTransactionDate())
                 .userId(vente.getUser() != null ? vente.getUser().getId() : null) // Extraire uniquement l'ID de l'utilisateur
+                .vendeurNom(vente.getUser().getNom())
+                .vendeurPrenom(vente.getUser().getPrenom())
                 .build();
     }
 
@@ -85,6 +92,7 @@ public class VenteDto {
                 .montantAssurance(venteDto.getMontantAssurance())
                 .fraisAgence(venteDto.getFraisAgence())
                 .totalSansAssurance(venteDto.getTotalSansAssurance())
+                .transactionDate(venteDto.getTransactionDate())
                 .user(user) // Assigner l'utilisateur
                 .build();
     }

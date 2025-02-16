@@ -15,9 +15,11 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.YearMonth;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -37,46 +39,49 @@ public class BilanServiceImpl implements BilanService {
     private UserRepository myAppUserRepository;
 
     @Override
-    public BilanDto saveOrUpdateBilan(Long userId) {
-        // Récupérer l'utilisateur
+    public void saveOrUpdateBilan(Long userId, YearMonth mois) {
         User user = myAppUserRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Utilisateur introuvable avec l'ID : " + userId));
 
-        // Rechercher le bilan de l'utilisateur, ou en créer un nouveau si non trouvé
-        Bilan bilan = bilanRepository.findByUserId(userId).orElseGet(Bilan::new);
+        // Rechercher un bilan existant pour le mois donné ou en créer un nouveau
+        Bilan bilan = bilanRepository.findByUserIdAndMoisBilan(userId, mois)
+                .orElseGet(() -> {
+                    Bilan newBilan = new Bilan();
+                    newBilan.setUser(user);
+                    newBilan.setMoisBilan(mois);
+                    return newBilan;
+                });
 
-        // Associer l'utilisateur au bilan
-        bilan.setUser(user);
+        // Mise à jour des valeurs du bilan avec les nouvelles ventes
+        double framCroisieres = Optional.ofNullable(venteRepository.totalMontantTOByUserIdForFramContaining(user.getId(), "FRAM", mois))
+                .orElse(0.0);
 
-        // Calculs des montants avec gestion des valeurs nulles
-        double framCroisieres = venteRepository.totalMontantTOByUserIdForFramContaining(user.getId(), "%" + "FRAM" + "%") != null
-                ? venteRepository.totalMontantTOByUserIdForFramContaining(user.getId(), "%" + "FRAM" + "%") : 0.0;
-        double autresTo = venteRepository.totalMontantTOByUserIdForNonFram(user.getId(), "%" + "FRAM" + "%") != null
-                ? venteRepository.totalMontantTOByUserIdForNonFram(user.getId(), "%" + "FRAM" + "%") : 0.0;
-        double realise = venteRepository.totalMontant(user.getId()) != null
-                ? venteRepository.totalMontant(user.getId()) : 0.0;
-        double objectif = 100000;
-        double montantAssurance = venteRepository.totalMontantAssuranceByUserId(user.getId()) != null
-                ? venteRepository.totalMontantAssuranceByUserId(user.getId()) : 0.0;
-        double nombreAssurance = venteRepository.countAssuranceSouscriteByUserId(user.getId()) != null
-                ? venteRepository.countAssuranceSouscriteByUserId(user.getId()) : 0.0;
+        double autresTo = Optional.ofNullable(venteRepository.totalMontantTOByUserIdForNonFram(user.getId(), "FRAM", mois))
+                .orElse(0.0);
 
-        double nombreVente = venteRepository.countVentesByUserId(user.getId()) != null
-                ? venteRepository.countVentesByUserId(user.getId()) : 0.0;
+        double realise = Optional.ofNullable(venteRepository.totalMontant(user.getId(), mois))
+                .orElse(0.0);
 
-        // Mise à jour des valeurs du bilan
+        double montantAssurance = Optional.ofNullable(venteRepository.totalMontantAssuranceByUserId(user.getId(), mois))
+                .orElse(0.0);
+
+        double nombreAssurance = Optional.ofNullable(venteRepository.countAssuranceSouscriteByUserId(user.getId(), mois))
+                .orElse(0L);
+
+        double nombreVente = Optional.ofNullable(venteRepository.countVentesByUserId(user.getId()))
+                .orElse(0.0);
+
+
         bilan.setFramCroisieres(framCroisieres);
         bilan.setAutresTo(autresTo);
         bilan.setRealise(realise);
-        bilan.setObjectif(objectif);
         bilan.setAssurances(nombreAssurance);
+        bilan.setObjectif(100000.0);
 
-        // Calcul des pourcentages
-        bilan.setPourcentageRealise(realise / objectif);
-        bilan.setPourcentageFram(framCroisieres / objectif);
-        bilan.setPourcentageAssurance(nombreAssurance / nombreVente);
+        bilan.setPourcentageRealise(realise / bilan.getObjectif());
+        bilan.setPourcentageFram(framCroisieres / bilan.getObjectif());
+        bilan.setPourcentageAssurance(nombreVente != 0 ? nombreAssurance / nombreVente : 0);
 
-        // Calcul des primes
         if (bilan.getPourcentageRealise() >= 1.0) {
             bilan.setTotalPrimesFram(framCroisieres / 1.2 * 0.01);
             bilan.setTotalPrimesAutre(autresTo / 1.2 * 0.005);
@@ -87,15 +92,13 @@ public class BilanServiceImpl implements BilanService {
             bilan.setTotalPrimesAss(montantAssurance / 1.2 * 0.01 * 0.8);
         }
 
-        // Calcul du total des primes brutes
         bilan.setTotalPrimesBrutes(bilan.getTotalPrimesAutre() + bilan.getTotalPrimesFram() + bilan.getTotalPrimesAss());
 
-        // Sauvegarder ou mettre à jour le bilan
         bilan = bilanRepository.save(bilan);
 
-        // Retourner le DTO
-        return BilanDto.fromEntity(bilan);
+        BilanDto.fromEntity(bilan);
     }
+
 
 
     @Override
@@ -118,7 +121,8 @@ public class BilanServiceImpl implements BilanService {
 
     @Override
     public BilanDto getBilanByUserId(Long id) {
-        Bilan bilan = bilanRepository.findByUserId(id)
+        YearMonth moisPrecedent = YearMonth.now();
+        Bilan bilan = bilanRepository.findByUserIdAndMoisBilan(id, moisPrecedent.minusMonths(1))
                 .orElseThrow(() -> new RuntimeException("Bilan non trouvé"));
         return BilanDto.fromEntity(bilan); // Retourner le DTO
     }
@@ -148,5 +152,11 @@ public class BilanServiceImpl implements BilanService {
         bilanAgence.put("bilans", bilans); // Liste des bilans individuels
 
         return bilanAgence;
+    }
+
+    @Override
+    public BilanDto getBilanByMoisAndUserId(Long userId, YearMonth choisirMois){
+        Optional<Bilan> bilan = bilanRepository.findByUserIdAndMoisBilan(userId, choisirMois);
+        return bilan.map(BilanDto::fromEntity).orElse(null);
     }
 }

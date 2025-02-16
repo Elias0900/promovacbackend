@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;
+import java.time.YearMonth;
 
 @Entity
 @Data
@@ -36,10 +37,10 @@ public class Bilan implements Serializable {
     private double montantAssurance;
 
 
-
-
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false) // Clé étrangère vers User
     private User user; // Relation avec l'utilisateur
+
+    private YearMonth moisBilan;
 
 }
