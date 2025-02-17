@@ -5,6 +5,7 @@ import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,6 +13,9 @@ import java.util.List;
 
 @Configuration
 public class OpenApiConfig {
+
+    @Value("${api.base-url}")
+    private String apiBaseUrl; // Injecte l'URL dynamique de l'API
 
     @Bean
     public OpenAPI customOpenAPI() {
@@ -30,11 +34,8 @@ public class OpenApiConfig {
                                 .url("https://opensource.org/licenses/MIT")))
                 .servers(List.of(
                         new Server()
-                                .url("http://localhost:8080") // URL du serveur local
-                                .description("Serveur de développement"),
-                        new Server()
-                                .url("https://api.agencevoyage.com") // URL du serveur de production
-                                .description("Serveur de production")
+                                .url(apiBaseUrl) // Utilise l'URL dynamique injectée
+                                .description("Serveur d'API")
                 ));
     }
 }

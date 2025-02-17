@@ -140,26 +140,11 @@ public interface VenteService {
      */
     Double totalMontantTOForNonFram(String tourOperateur);
 
-    /**
-     * Recherche des ventes basées sur plusieurs critères.
-     *
-     * @param userId L'ID de l'utilisateur.
-     * @param nom Le nom du client.
-     * @param prenom Le prénom du client.
-     * @param numeroDossier Le numéro de dossier de la vente.
-     * @param dateDepart La date de départ de la vente.
-     * @param dateValidation La date de validation de la vente.
-     * @param assurance Filtre sur le type d'assurance.
-     * @param sortBy Le critère de tri.
-     * @param sortDirection La direction du tri (ascendant ou descendant).
-     * @return Liste des ventes correspondant aux critères de recherche.
-     */
-    List<Vente> searchVentes(Long userId, String nom, String prenom, String numeroDossier,
-                             LocalDate dateDepart, LocalDate dateValidation, Boolean assurance,
-                             String sortBy, String sortDirection);
 
 
-    List<VenteDto> rechercher(String keyword, Long agenceId);
+    List<VenteDto> rechercherByAgence(String keyword, Long agenceId);
+
+    List<VenteDto> rechercherByUser(String keyword, Long userId);
 
     List<VenteDto> getVentesDuMoisPrecedentByUser(Long userId);
 }
