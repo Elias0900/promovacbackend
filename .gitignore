@@ -1,0 +1,52 @@
+# === Java ===
+*.class
+*.jar
+*.war
+*.ear
+
+# === Logs ===
+logs/
+*.log
+!src/main/resources/log4j2.xml
+!src/main/resources/application*.yml
+!src/main/resources/application*.properties
+
+# === IntelliJ IDEA ===
+.idea/
+*.iml
+out/
+
+# === Eclipse ===
+.project
+.classpath
+.settings/
+bin/
+
+# === VS Code ===
+.vscode/
+
+# === Build / Dependencies ===
+/target/
+/build/
+mvnw
+mvnw.cmd
+!mvnw
+!mvnw.cmd
+/.mvn/
+
+# === Spring Boot Specific ===
+/spring-boot-loader/
+/dependency-reduced-pom.xml
+/.cache/
+/.spring-boot-devtools.properties
+/.npm/
+
+# === OS Specific ===
+.DS_Store
+Thumbs.db
+
+# === Docker ===
+/docker-compose.override.yml
+
+# === Environment Variables ===
+.env

@@ -267,29 +267,15 @@ public class VenteController {
      * Cette méthode permet de rechercher des ventes en filtrant par différents critères tels que le nom, le prénom, le numéro de dossier, etc.
      *
      * @param userId L'ID de l'utilisateur pour lequel on recherche les ventes.
-     * @param nom Le nom de la personne (optionnel).
-     * @param prenom Le prénom de la personne (optionnel).
-     * @param numeroDossier Le numéro de dossier des ventes (optionnel).
-     * @param dateDepart La date de départ des ventes (optionnel).
-     * @param dateValidation La date de validation des ventes (optionnel).
-     * @param assurance Indicateur si une assurance a été souscrite (optionnel).
-     * @param sortBy Le champ par lequel trier (optionnel, par défaut "numeroDossier").
-     * @param sortDirection Le sens du tri (optionnel, par défaut "ASC").
      * @return Une liste de ventes correspondant aux critères de recherche.
      */
     @GetMapping("/user/{userId}/search")
-    public ResponseEntity<List<Vente>> searchVentes(
+    public ResponseEntity<List<VenteDto>> searchVentes(
             @PathVariable Long userId,
-            @RequestParam(required = false) String nom,
-            @RequestParam(required = false) String prenom,
-            @RequestParam(required = false) String numeroDossier,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateDepart,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateValidation,
-            @RequestParam(required = false) Boolean assurance,
-            @RequestParam(defaultValue = "numeroDossier") String sortBy,
-            @RequestParam(defaultValue = "ASC") String sortDirection
+            @PathVariable Long agenceId,
+            @RequestParam(required = false) String recherche
     ) {
-        return ResponseEntity.ok().body(venteService.searchVentes(userId, nom, prenom, numeroDossier, dateDepart, dateValidation, assurance, sortBy, sortDirection));
+        return ResponseEntity.ok().body(venteService.rechercherByUser(recherche,userId));
     }
 
 
@@ -298,7 +284,7 @@ public class VenteController {
         @PathVariable Long agenceId,
         @RequestParam(required = false) String recherche
     ) {
-        return ResponseEntity.ok().body(venteService.rechercher(recherche,agenceId));
+        return ResponseEntity.ok().body(venteService.rechercherByAgence(recherche,agenceId));
     }
 
     @GetMapping(value = "/ventes-du-mois/{userId}", produces = "application/json")

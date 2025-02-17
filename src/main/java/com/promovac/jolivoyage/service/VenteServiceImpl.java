@@ -158,23 +158,7 @@ public class VenteServiceImpl implements VenteService {
         return venteRepository.totalMontantTOForNonFram(tourOperateur);
     }
 
-    @Override
-    public List<Vente> searchVentes(Long userId, String nom, String prenom, String numeroDossier,
-                                    LocalDate dateDepart, LocalDate dateValidation, Boolean assurance,
-                                    String sortBy, String sortDirection) {
 
-        Specification<Vente> spec = Specification
-                .where(VentesSpecificationsByUser.hasUserId(userId))
-                .and(VentesSpecificationsByUser.hasNom(nom))
-                .and(VentesSpecificationsByUser.hasPrenom(prenom))
-                .and(VentesSpecificationsByUser.hasNumeroDossier(numeroDossier))
-                .and(VentesSpecificationsByUser.hasDateDepartAfter(dateDepart))
-                .and(VentesSpecificationsByUser.hasDateValidation(dateValidation))
-                .and(VentesSpecificationsByUser.hasAssurance(assurance));
-
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
-        return venteRepository.findAll(spec, sort);
-    }
 
 
     /**
@@ -184,7 +168,34 @@ public class VenteServiceImpl implements VenteService {
      * @return Liste des ventes correspondant au critère de recherche.
      */
     @Override
-    public List<VenteDto> rechercher(String keyword, Long agenceId) {
+    public List<VenteDto> rechercherByAgence(String keyword, Long agenceId) {
+        List<Vente> ventes = venteRepository.findVentesByAgenceId(agenceId);
+
+        return ventes.stream()
+                .filter(vente ->
+                        (vente.getNom() != null && vente.getNom().toLowerCase().contains(keyword.toLowerCase())) ||
+                                (vente.getPrenom() != null && vente.getPrenom().toLowerCase().contains(keyword.toLowerCase())) ||
+                                (vente.getNumeroDossier() != null && vente.getNumeroDossier().toLowerCase().contains(keyword.toLowerCase())) ||
+                                (vente.getTourOperateur() != null && vente.getTourOperateur().toLowerCase().contains(keyword.toLowerCase())) ||
+                                (vente.getVenteTotal() != null && vente.getVenteTotal().toString().contains(keyword)) ||
+                                (String.valueOf(vente.getPax()).contains(keyword)) ||
+                                (String.valueOf(vente.isAssurance()).contains(keyword)) ||
+                                (String.valueOf(vente.getMontantAssurance()).contains(keyword)) ||
+                                (String.valueOf(vente.getFraisAgence()).contains(keyword)) ||
+                                (String.valueOf(vente.getTotalSansAssurance()).contains(keyword))
+                )
+                .map(VenteDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Recherche les ventes en fonction d'un mot-clé sur tous les champs sauf les dates.
+     *
+     * @param keyword Le mot-clé à rechercher.
+     * @return Liste des ventes correspondant au critère de recherche.
+     */
+    @Override
+    public List<VenteDto> rechercherByUser(String keyword, Long agenceId) {
         List<Vente> ventes = venteRepository.findVentesByAgenceId(agenceId);
 
         return ventes.stream()
