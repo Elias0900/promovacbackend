@@ -76,7 +76,7 @@ public class BilanServiceImpl implements BilanService {
         bilan.setAutresTo(autresTo);
         bilan.setRealise(realise);
         bilan.setAssurances(nombreAssurance);
-        bilan.setObjectif(100000.0);
+        bilan.setObjectif(user.getAgence().getObjectif());
 
         bilan.setPourcentageRealise(realise / bilan.getObjectif());
         bilan.setPourcentageFram(framCroisieres / bilan.getObjectif());
