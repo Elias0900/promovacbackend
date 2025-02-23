@@ -66,7 +66,7 @@ public class BilanServiceImpl implements BilanService {
                 .orElse(0.0);
 
         double nombreAssurance = Optional.ofNullable(venteRepository.countAssuranceSouscriteByUserId(user.getId(), mois))
-                .orElse(0L);
+                .orElse(0.0);
 
         double nombreVente = Optional.ofNullable(venteRepository.countVentesByUserId(user.getId()))
                 .orElse(0.0);

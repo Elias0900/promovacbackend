@@ -31,6 +31,15 @@ public interface VenteRepository extends JpaRepository<Vente, Long>, JpaSpecific
     @Query("SELECT v FROM Vente v WHERE v.user.agence.id = :agenceId")
     List<Vente> findVentesByAgenceId(@Param("agenceId") Long AgenceId);
 
+    /**
+     * Récupère toutes les ventes effectuées par un utilisateur spécifique.
+     *
+     * @param AgenceId L'ID de l'utilisateur
+     * @return Une liste d'objets Vente associés à l'utilisateur
+     */
+    @Query("SELECT v FROM Vente v WHERE v.user.agence.id = :agenceId and v.transactionDate = :transactionDate")
+    List<Vente> findVentesByAgenceIdByMonth(@Param("agenceId") Long AgenceId, @Param("transactionDate") YearMonth yearMonth);
+
 
     /**
      * Calcule le montant total des assurances pour un utilisateur spécifique sur un mois donné.
@@ -50,7 +59,7 @@ public interface VenteRepository extends JpaRepository<Vente, Long>, JpaSpecific
      * @return Le nombre d'assurances souscrites par l'utilisateur sur le mois donné
      */
     @Query("select count(v) from Vente v where v.user.id = :userId and v.assurance = true and v.transactionDate = :transactionDate")
-    Long countAssuranceSouscriteByUserId(@Param("userId") Long userId, @Param("transactionDate") YearMonth transactionDate);
+    Double countAssuranceSouscriteByUserId(@Param("userId") Long userId, @Param("transactionDate") YearMonth transactionDate);
 
     /**
      * Calcule le montant total des ventes réalisées par un utilisateur spécifique sur un mois donné.
@@ -229,13 +238,18 @@ public interface VenteRepository extends JpaRepository<Vente, Long>, JpaSpecific
     Double totalMontantTOForNonFram(@Param("tourOperateur") String tourOperateur);
 
     @Query("SELECT v FROM Vente v WHERE v.transactionDate = :transactionDate AND v.user.id = :userId")
-    List<Vente> findVentesDuMoisPrecedentByUser(@Param("transactionDate ") YearMonth lastMonth,
+    List<Vente> findVentesDuMoisPrecedentByUser(@Param("transactionDate") YearMonth lastMonth,
                                                 @Param("userId") Long userId);
 
-//    @Query("SELECT v FROM Vente v WHERE YEAR(v.dateValidation) = YEAR(:lastMonth) " +
-//            "AND MONTH(v.dateValidation) = MONTH(:lastMonth) " +
-//            "AND v.user.agenceId = :agenceId")
-//    List<Vente> findVentesDuMoisPrecedentPourAgence(@Param("lastMonth") LocalDate lastMonth,
-//                                                  @Param("agenceId") Long agenceId);
+
+
+    @Query("select count(v) from Vente v where v.user.agence.id = :agenceId and v.transactionDate = :transactionDate")
+    Double countVenteTotal(@Param("agenceId") Long agenceId, @Param("transactionDate") YearMonth transactionDate);
+
+    @Query("select count(v) from Vente v where v.user.agence.id = :agenceId and v.assurance = true and v.transactionDate = :transactionDate")
+    Double countAssuranceSouscriteByAgenceIdAndMonth(@Param("agenceId") Long agenceId, @Param("transactionDate") YearMonth transactionDate);
+
+    @Query("select count(v) from Vente v where v.user.agence.id = :agenceId and  v.tourOperateur = 'FRAM' and v.transactionDate = :transactionDate")
+    Double countFramByAgenceIdAndMonth(@Param("agenceId") Long agenceId, @Param("transactionDate") YearMonth transactionDate);
 
 }

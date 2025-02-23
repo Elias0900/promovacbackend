@@ -1,5 +1,6 @@
 package com.promovac.jolivoyage.controller;
 
+import com.promovac.jolivoyage.dto.AssuranceAndFramDto;
 import com.promovac.jolivoyage.dto.VenteDto;
 import com.promovac.jolivoyage.dto.VentesParJourDto;
 import com.promovac.jolivoyage.entity.Vente;
@@ -155,6 +156,11 @@ public class VenteController {
         return ResponseEntity.ok().body(venteService.findAll());
     }
 
+    @GetMapping(value = "/all/{agenceId}",produces = "application/json")
+    public ResponseEntity<List<VenteDto>> getAllVentesMois(@PathVariable long agenceId){
+        return ResponseEntity.ok().body(venteService.findAllMois(agenceId));
+    }
+
     /**
      * Récupère les ventes par jour sous forme de graphique pour une année spécifique.
      * Cette méthode permet d'obtenir les ventes groupées par jour pour une année donnée.
@@ -290,5 +296,10 @@ public class VenteController {
     @GetMapping(value = "/ventes-du-mois/{userId}", produces = "application/json")
     public ResponseEntity<List<VenteDto>> ventesDuMois(@PathVariable Long userId) {
         return ResponseEntity.ok().body(venteService.getVentesDuMoisPrecedentByUser(userId));
+    }
+
+    @GetMapping(value = "/set-assurance-and-fram/{agenceId}", produces = "application/json")
+    public ResponseEntity<AssuranceAndFramDto> setAssuranceAndFram(@PathVariable Long agenceId){
+        return ResponseEntity.ok().body(venteService.setAssuranceAndFram(agenceId));
     }
 }

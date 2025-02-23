@@ -1,5 +1,6 @@
 package com.promovac.jolivoyage.service.interf;
 
+import com.promovac.jolivoyage.dto.AssuranceAndFramDto;
 import com.promovac.jolivoyage.dto.VenteDto;
 import com.promovac.jolivoyage.dto.VentesParJourDto;
 import com.promovac.jolivoyage.entity.Vente;
@@ -16,6 +17,13 @@ public interface VenteService {
      * @return Liste de tous les DTOs de ventes.
      */
     List<VenteDto> findAll();
+
+    /**
+     * Récupère toutes les ventes réalisées.
+     *
+     * @return Liste de tous les DTOs de ventes.
+     */
+    List<VenteDto> findAllMois(long agenceId);
 
     /**
      * Sauvegarde ou met à jour une vente.
@@ -147,4 +155,6 @@ public interface VenteService {
     List<VenteDto> rechercherByUser(String keyword, Long userId);
 
     List<VenteDto> getVentesDuMoisPrecedentByUser(Long userId);
+
+    AssuranceAndFramDto setAssuranceAndFram(Long agenceId);
 }

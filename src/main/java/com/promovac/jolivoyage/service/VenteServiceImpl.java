@@ -1,6 +1,7 @@
 package com.promovac.jolivoyage.service;
 
 
+import com.promovac.jolivoyage.dto.AssuranceAndFramDto;
 import com.promovac.jolivoyage.dto.VenteDto;
 import com.promovac.jolivoyage.dto.VentesParJourDto;
 import com.promovac.jolivoyage.entity.User;
@@ -9,11 +10,8 @@ import com.promovac.jolivoyage.repository.UserRepository;
 import com.promovac.jolivoyage.repository.VenteRepository;
 import com.promovac.jolivoyage.service.interf.BilanService;
 import com.promovac.jolivoyage.service.interf.VenteService;
-import com.promovac.jolivoyage.specifications.VentesSpecificationsByUser;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -36,7 +34,7 @@ public class VenteServiceImpl implements VenteService {
     @Autowired
     private BilanService bilanService;
 
-    private YearMonth moisActuel = YearMonth.now();
+    private final YearMonth moisActuel = YearMonth.now();
 
     @Override
     public List<VenteDto> findAll() {
@@ -51,6 +49,14 @@ public class VenteServiceImpl implements VenteService {
 
         return venteDtoList;
 
+    }
+
+    @Override
+    public List<VenteDto> findAllMois(long agenceId) {
+        List<Vente> ventes = venteRepository.findVentesByAgenceIdByMonth(agenceId, moisActuel);
+        return ventes.stream()
+                .map(VenteDto::fromEntity) // Conversion Entités -> DTOs
+                .toList();
     }
 
     @Override
@@ -216,16 +222,39 @@ public class VenteServiceImpl implements VenteService {
     }
     @Override
     public List<VenteDto> getVentesDuMoisPrecedentByUser(Long userId) {
-        YearMonth lastMonth = YearMonth.now();
-        List<Vente> ventes = venteRepository.findVentesDuMoisPrecedentByUser(lastMonth.minusMonths(1), userId);
+        List<Vente> ventes = venteRepository.findVentesDuMoisPrecedentByUser(moisActuel, userId);
         return ventes.stream().map(VenteDto::fromEntity).collect(Collectors.toList());
     }
 
-//    public List<VenteDto> getVentesDuMoisPrecedentByAgence(Long agenceId) {
-//        LocalDate lastMonth = LocalDate.now().minusMonths(1).withDayOfMonth(1);
-//        List<Vente> ventes = venteRepository.findVentesDuMoisPrecedentPourAgence(lastMonth, agenceId);
-//        return ventes.stream().map(VenteDto::fromEntity).collect(Collectors.toList());
-//    }
+
+    @Override
+    public AssuranceAndFramDto setAssuranceAndFram(Long agenceId) {
+        AssuranceAndFramDto assuranceAndFramDto = new AssuranceAndFramDto();
+
+        // Récupération des données avec une gestion des valeurs null (remplacées par 0)
+        Double assuranceTotal = venteRepository.countAssuranceSouscriteByAgenceIdAndMonth(agenceId, moisActuel);
+        Double venteFram = venteRepository.countFramByAgenceIdAndMonth(agenceId, moisActuel);
+        Double venteTotal = venteRepository.countVenteTotal(agenceId, moisActuel);
+
+        // Remplacement des valeurs null par 0 pour éviter les NullPointerException
+        assuranceTotal = (assuranceTotal != null) ? assuranceTotal : 0.0;
+        venteFram = (venteFram != null) ? venteFram : 0.0;
+        venteTotal = (venteTotal != null) ? venteTotal : 0.0;
+
+        // Calcul des ventes sans assurance
+        assuranceAndFramDto.setVenteSansAssurance(venteTotal - assuranceTotal);
+        assuranceAndFramDto.setAssuranceTotal(assuranceTotal);
+
+        // Calcul vente Fram
+        assuranceAndFramDto.setVenteFram(venteFram);
+        assuranceAndFramDto.setVenteSansFram( venteTotal - venteFram );
+
+        // Éviter la division par zéro
+        assuranceAndFramDto.setPourcentageAssurance((venteTotal > 0) ? (assuranceTotal / venteTotal) * 100 : 0.0);
+        assuranceAndFramDto.setPourcentageFram((venteTotal > 0) ? (venteFram / venteTotal) * 100 : 0.0);
+
+        return assuranceAndFramDto;
+    }
 
 }
 

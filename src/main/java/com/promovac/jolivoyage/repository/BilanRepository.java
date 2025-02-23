@@ -30,8 +30,6 @@ public interface BilanRepository extends JpaRepository<Bilan, Long> {
 
     Optional<Bilan> findByUserIdAndMoisBilan(Long userId, YearMonth moisActuel);
 
-    // Si tu veux ajouter d'autres méthodes comme par date ou par statut, voici un exemple :
-    // @Query("SELECT b FROM Bilan b WHERE b.date >= :startDate AND b.date <= :endDate")
-    // List<Bilan> findByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
 
 }
